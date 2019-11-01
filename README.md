@@ -13,7 +13,7 @@ The starter files contain code that implement most of the needed functionality a
 ## Getting the Starter Files
 The files can be obtained using the URL listed in the green button above labeled "Clone or Download"
 
-```$ git close [Team URL]```
+```$ git clone [Team URL]```
 
 ## Files
 * auto_driver/src:
