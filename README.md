@@ -7,9 +7,15 @@ In this project you will implement the methods for four control laws as covered 
 * Move to Pose
 * Follow Line
 
+
 The starter files contain code that implement most of the needed functionality and the project has the structure of a ROS workspace. After cloning your project and before compiling with catkin_make, please make to understand the code. Then, make the necessary editions so the project can compile.
 
-The files are:
+## Getting the Starter Files
+The files can be obtained using the URL listed in the green button above labeled "Clone or Download"
+
+```$ git close [Team URL]```
+
+## Files
 * auto_driver/src:
   * 03_robot.cpp - Robot class. Here is where you need to implement the control laws. 
     * Find sections between the following markers:
