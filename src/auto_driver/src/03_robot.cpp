@@ -30,7 +30,7 @@ struct ControlU {
 class Robot {
 public:
   Robot(): speed_pub(NULL), steering_pub(NULL) {
-    srand(time(NULL)); /* initialize random seed, if this is done outside the class, the lines below could be replace by a constructor deferal  */
+    srand(time(NULL)); /* initialize random seed, if this is done outside the class, the lines below could be replace by a constructor deferal  */    
     this->Set((rand()/RAND_MAX)*(bbox_x2 -bbox_x1) + bbox_x1,
 	      (rand()/RAND_MAX)*(bbox_y2 -bbox_y1) + bbox_y1,
 	      (rand()/RAND_MAX)*(M_PI));
@@ -38,10 +38,10 @@ public:
     length = robot_length;
     this->SetControlLaw(ControlMoveToPoint);
   }
-
+  
   Robot(double x, double y, double theta): Robot(x,y,theta, "AutoNOMOs Simulation") {
   }
-
+  
   Robot(double x, double y, double theta, string name, ros::Publisher *p_speed_pub=NULL, ros::Publisher *p_steering_pub=NULL): speed_pub(p_speed_pub), steering_pub(p_steering_pub) {
     this->Set(x,y,theta);
     this->SetName(name);
@@ -76,7 +76,7 @@ public:
   y_goal = _y_goal;
   theta_goal = _theta_goal;
   }
-
+  
   bool ComputeControls() {
     double v_goal, gamma_goal;
     bool achieved_goal = (*controller_f)(v_goal, gamma_goal, error_prev, x, y, theta, x_goal, y_goal, theta_goal, k_1, k_2, k_3, epsilon);
@@ -105,7 +105,7 @@ public:
     }
     if (steering_pub != NULL) {
       to_publish.data = steering;
-      steering_pub->publish(to_publish);
+      steering_pub->publish(to_publish); 
    }
   }
 
@@ -172,7 +172,7 @@ public:
 
   }
 
-
+  
   ControlU GetControllers() {
     ControlU u;
     u.v = v;
@@ -202,17 +202,17 @@ public:
     //out << "Dot(" << robot.x_dot << "," << robot.y_dot << "," << robot.theta_dot << ") ";
     out << "Control [m](" << robot.v  << "," << robot.gamma << ") ";
     //out << "[rbt] (" << robot.speed <<  ","<< robot.steering << ")";
-
+ 
     return out;
   }
-
+  
 private:
 
   string name;
   double length;
 
   ros::Publisher *speed_pub, *steering_pub;
-
+  
   double x, y, theta;                // Robot Pose
   double x_dot, y_dot, theta_dot;    // Robot velocity
   double x_goal, y_goal, theta_goal; // Goal to achieve
@@ -222,21 +222,21 @@ private:
   double k_1, k_2, k_3; // Constants for controllers
   double epsilon; // Tolerance for controller error
   double error_prev; // Error used in integral and differential controls
-
+  
   bool (*controller_f)(double&, double&, double&, double, double, double, double, double, double, double, double, double, double); // Pointer to control function
-
+  
   void Set(double x, double y, double theta, double x_dot = 0, double y_dot = 0, double theta_dot = 0) {
     this->x = x;
     this->y = y;
     this->theta = theta;
     this->x_dot = x_dot;
     this->y_dot = y_dot;
-    this->theta_dot = theta_dot;
+    this->theta_dot = theta_dot;    
   }
 
   void SetName(string new_name) {
     this->name = new_name;
   }
-
+  
 };
 #endif //ROBOT_H

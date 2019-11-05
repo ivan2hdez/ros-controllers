@@ -202,3 +202,7 @@ include_directories(
 add_executable(03_controllers src/03_controllers.cpp)
 target_link_libraries(03_controllers ${catkin_LIBRARIES})
 add_dependencies(03_controllers autonomous_robots_course_messages_cpp 03_robot)
+
+add_executable(03_test src/03_test.cpp)
+target_link_libraries(03_test ${catkin_LIBRARIES})
+add_dependencies(03_test autonomous_robots_course_messages_cpp)

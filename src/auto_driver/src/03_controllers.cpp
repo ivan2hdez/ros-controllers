@@ -62,7 +62,7 @@ void SetControlLawCallback(const std_msgs::String& msgIn) {
 }
 
 int main(int argc, char**argv) {
-  ros::init(argc, argv, "03_controllers"); // Node 03_controllers
+  ros::init(argc, argv, "controllers"); // Node 03_controllers
   ros::NodeHandle nh; // Main access point to communications with ROS
 
   // publishers for speed and steering
@@ -79,7 +79,7 @@ int main(int argc, char**argv) {
   ros::Subscriber  next_pose_sub = nh.subscribe("/auto_driver/next_pose", ros_buffer_size, NextPoseCallback);
 
   // subscriber to set controller
-  ros::Subscriber controller_sub = nh.subscribe("/auto_driver/set_control_law", ros_buffer_size, SetControllerCallback);
+  ros::Subscriber controller_sub = nh.subscribe("/auto_driver/set_control_law", ros_buffer_size, SetControlLawCallback);
   
   // service to handle reset path requests
   ros::ServiceServer reset_path_srv = nh.advertiseService("auto_driver/reset_path", ResetPathCallback);
