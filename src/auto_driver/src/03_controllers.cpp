@@ -24,6 +24,7 @@
 #include <geometry_msgs/Pose2D.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
+#include <std_srvs/Trigger.h>
 
 
 Robot *sim_robot;
@@ -50,16 +51,18 @@ bool ResetPathCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
   return true;
 }
 
-bool IsGoalSetCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp) {
-  return goal_set;
-}
-
 void SetControlLawCallback(const std_msgs::String& msgIn) {
   path.clear();
   goal_set = false;
   string controller= msgIn.data;
   sim_robot->SetControlLaw(controller);
 }
+
+bool IsGoalSetCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &resp) {
+  resp.success=goal_set;
+  return goal_set;
+}
+
 
 int main(int argc, char**argv) {
   ros::init(argc, argv, "controllers"); // Node 03_controllers
@@ -100,10 +103,14 @@ int main(int argc, char**argv) {
       sim_robot->PublishControls();
     }
 
-    if ((!goal_set || goal_achieved) && path.size() != 0) { // Next goal
-      sim_robot->SetGoal(path[0].x, path[0].y, path[0].theta);
-      goal_set = true;
-      path.pop_front();// Remove goal from path
+    if ((!goal_set || goal_achieved)) { // Next goal
+      if (path.size() !=0) { // get next goal from path
+	sim_robot->SetGoal(path[0].x, path[0].y, path[0].theta);
+	goal_set = true;
+	path.pop_front(); // Remove goal from path
+      } else { // last goal has been achieved
+	goal_set = false;
+      }
     }
     
     ROS_INFO_STREAM(*sim_robot);
