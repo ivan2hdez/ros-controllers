@@ -197,10 +197,11 @@ public:
   // Operators
   friend std::ostream& operator << (std::ostream &out, const Robot &robot){
     out.precision(2); // sets decimal precision to 2 significant digits
-    out << "\n\t" << robot.name << ":";
+    out << "\n\t" << robot.name << ": ";
     out << "Pose(" << robot.x << "," << robot.y << "," << robot.theta << ") ";
     //out << "Dot(" << robot.x_dot << "," << robot.y_dot << "," << robot.theta_dot << ") ";
-    out << "Control [m](" << robot.v  << "," << robot.gamma << ") ";
+    out << "Goal(" << robot.x_goal << "," << robot.y_goal << "," << robot.theta_goal << ") ";
+    out << "Control(" << robot.v  << "," << robot.gamma << ") ";
     //out << "[rbt] (" << robot.speed <<  ","<< robot.steering << ")";
 
     return out;

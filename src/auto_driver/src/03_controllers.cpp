@@ -24,6 +24,7 @@
 #include <geometry_msgs/Pose2D.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
+#include <std_srvs/Trigger.h>
 
 
 Robot *sim_robot;
@@ -50,10 +51,6 @@ bool ResetPathCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
   return true;
 }
 
-bool IsGoalSetCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp) {
-  return goal_set;
-}
-
 void SetControlLawCallback(const std_msgs::String& msgIn) {
   path.clear();
   goal_set = false;
@@ -61,8 +58,14 @@ void SetControlLawCallback(const std_msgs::String& msgIn) {
   sim_robot->SetControlLaw(controller);
 }
 
+bool IsGoalSetCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &resp) {
+  resp.success=goal_set;
+  return goal_set;
+}
+
+
 int main(int argc, char**argv) {
-  ros::init(argc, argv, "03_controllers"); // Node 03_controllers
+  ros::init(argc, argv, "controllers"); // Node 03_controllers
   ros::NodeHandle nh; // Main access point to communications with ROS
 
   // publishers for speed and steering
@@ -79,11 +82,11 @@ int main(int argc, char**argv) {
   ros::Subscriber  next_pose_sub = nh.subscribe("/auto_driver/next_pose", ros_buffer_size, NextPoseCallback);
 
   // subscriber to set controller
-  ros::Subscriber controller_sub = nh.subscribe("/auto_driver/set_control_law", ros_buffer_size, SetControllerCallback);
-  
+  ros::Subscriber controller_sub = nh.subscribe("/auto_driver/set_control_law", ros_buffer_size, SetControlLawCallback);
+
   // service to handle reset path requests
   ros::ServiceServer reset_path_srv = nh.advertiseService("auto_driver/reset_path", ResetPathCallback);
-  
+
 
   sim_robot = new Robot(0,0,0,"Sim",&speed_pub,&steering_pub);
 
@@ -92,7 +95,7 @@ int main(int argc, char**argv) {
 
   while (ros::ok()) {
     bool goal_achieved = false;
-    if (goal_set) {      
+    if (goal_set) {
       goal_achieved = sim_robot->ComputeControls();
       sim_robot->PublishControls();
     } else { // stop robot
@@ -100,14 +103,18 @@ int main(int argc, char**argv) {
       sim_robot->PublishControls();
     }
 
-    if ((!goal_set || goal_achieved) && path.size() != 0) { // Next goal
-      sim_robot->SetGoal(path[0].x, path[0].y, path[0].theta);
-      goal_set = true;
-      path.pop_front();// Remove goal from path
+    if ((!goal_set || goal_achieved)) { // Next goal
+      if (path.size() !=0) { // get next goal from path
+	sim_robot->SetGoal(path[0].x, path[0].y, path[0].theta);
+	goal_set = true;
+	path.pop_front(); // Remove goal from path
+      } else { // last goal has been achieved
+	goal_set = false;
+      }
     }
-    
+
     ROS_INFO_STREAM(*sim_robot);
-        
+
     // remaining necessary calls for ROS loop and callbacks
     loop_rate.sleep(); // waits what necessary to keep loop_rate
     ros::spinOnce(); // handles callbacks
