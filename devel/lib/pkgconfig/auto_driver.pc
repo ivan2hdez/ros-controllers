@@ -1,0 +1,8 @@
+prefix=/home/ivan/Documentos/ITAM/Project3/ar-pp3-sc/devel
+
+Name: auto_driver
+Description: Description of auto_driver
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/ivan/Documentos/ITAM/Project3/ar-pp3-sc/devel/lib 
+Requires: 

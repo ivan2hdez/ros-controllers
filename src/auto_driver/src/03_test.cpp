@@ -16,6 +16,8 @@
  *    /auto_driver/is_goal_set	(to see if robot got to goal)
  */
 
+//#include "03_robot.cpp"
+
 #include <deque>
 #include <string>
 
@@ -27,7 +29,6 @@
 #include <std_srvs/Trigger.h>
 
 using namespace std;
-
 deque<geometry_msgs::Pose2D> path;
 
 double x, y, theta;
@@ -42,6 +43,7 @@ void PoseCallback(const geometry_msgs::Pose2D& msgIn) {
 }
 
 int main(int argc, char**argv) {
+  //ros::init(argc, argv, "03_controllers"); // Node 03_controllers
   ros::init(argc, argv, "test_controllers"); // Node 03_controllers
   ros::NodeHandle nh; // Main access point to communications with ROS
 
@@ -60,44 +62,45 @@ int main(int argc, char**argv) {
   // add a service client to gazebo/reset_simulation
   ros::ServiceClient is_goal_set_clnt = nh.serviceClient<std_srvs::Trigger>("auto_driver/is_goal_set");
 
-  geometry_msgs::Pose2D new_pose;
-  std_msgs::String new_control_law;
+
+   geometry_msgs::Pose2D new_pose;
+   std_msgs::String new_control_law;
 
   ros::Rate loop_rate(ros_loop_rate);
   double delta_t = 1.0/ros_loop_rate;
   int n_times;
 
-  std::vector<string> control_laws = { "FollowPath", "MoveToPoint", "MoveToPose"};
-  std::array<array<double, 3>, 8> poses = {{ { 2.0,  2.0,   30*M_PI/180},
-					     { 6.0,  3.0,    0*M_PI/180},
-					     { 9.0,  0.0,  -45*M_PI/180},
-					     { 9.0, -3.0,  -90*M_PI/180},
-					     { 7.0, -6.0, -135*M_PI/180},
-					     { 3.0, -5.0, -180*M_PI/180},
-					     { 2.0, -3.0,  135*M_PI/180},
-					     { 0.0,  0.0,   90*M_PI/180},
-                                          }};
+  std::vector<string> control_laws = { "MoveToPoint", "FollowPath", "MoveToPose"};
+  std::array<array<double, 3>, 8> poses = {{
+    { 2.0,  2.0,   30*M_PI/180},
+    { 6.0,  3.0,    0*M_PI/180},
+    { 9.0,  0.0,  -45*M_PI/180},
+    { 9.0, -3.0,  -90*M_PI/180},
+    { 7.0, -6.0, -135*M_PI/180},
+    { 3.0, -5.0, -180*M_PI/180},
+    { 0.0,  0.0,   90*M_PI/180},
+  }};
 
   for (const auto& control_law: control_laws) {
-    std_srvs::Empty::Request req;
-    std_srvs::Empty::Response resp;
-    reset_path_clnt.call(req, resp);
-    reset_simulation_clnt.call(req, resp);
-    new_control_law.data = control_law;
+     std_srvs::Empty::Request req;
+     std_srvs::Empty::Response resp;
+     reset_path_clnt.call(req, resp);
+     reset_simulation_clnt.call(req, resp);
+     new_control_law.data = control_law;
 
-    while(control_law_pub.getNumSubscribers()<1) {
-      loop_rate.sleep(); // waits what necessary to keep loop_rate
-      ros::spinOnce(); // handles callbacks
-    }
-    ROS_INFO_STREAM("Requesting new control law: "<< new_control_law.data);
-    control_law_pub.publish(new_control_law);
+     while(control_law_pub.getNumSubscribers()<1) {
+       loop_rate.sleep(); // waits what necessary to keep loop_rate
+       ros::spinOnce(); // handles callbacks
+     }
+     ROS_INFO_STREAM("Requesting new control law: "<< new_control_law.data);
+     control_law_pub.publish(new_control_law);
 
     for (const auto& pose: poses) { //iterator pose = poses.begin(); pose != poses.end() && ros::ok(); pose++) {
       new_pose.x = pose[0];
       new_pose.y = pose[1];
       new_pose.theta = pose[2];
-      ROS_INFO_STREAM("Requesting new pose: "<< new_pose.x << "," << new_pose.y << "," << new_pose.theta);
       next_pose_pub.publish(new_pose);
+      ROS_INFO_STREAM("Requesting new pose: "<< new_pose.x << "," << new_pose.y << "," << new_pose.theta);
       // remaining necessary calls for ROS loop and callbacks
       loop_rate.sleep(); // waits what necessary to keep loop_rate
       ros::spinOnce(); // handles callbacks
@@ -106,12 +109,12 @@ int main(int argc, char**argv) {
 	break;
     }
 
-    std_srvs::Trigger::Request req_goal_set;
-    std_srvs::Trigger::Response resp_goal_set;
+     std_srvs::Trigger::Request req_goal_set;
+     std_srvs::Trigger::Response resp_goal_set;
 
-    while(is_goal_set_clnt.call(req_goal_set, resp_goal_set)
-	  && resp_goal_set.success
-	  && ros::ok()) {// wait until path is completed
+     while(is_goal_set_clnt.call(req_goal_set, resp_goal_set)
+ 	  && resp_goal_set.success
+ 	  && ros::ok()) {// wait until path is completed
       loop_rate.sleep();
       ros::spinOnce();
     }

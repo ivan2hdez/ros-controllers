@@ -1,0 +1,2 @@
+auto_driver
+-DCATKIN_DEVEL_PREFIX=/home/ivan/Documentos/ITAM/Project3/ar-pp3-sc/devel -DCMAKE_INSTALL_PREFIX=/home/ivan/Documentos/ITAM/Project3/ar-pp3-sc/install -G Unix Makefiles

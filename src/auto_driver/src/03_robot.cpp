@@ -80,8 +80,8 @@ public:
   bool ComputeControls() {
     double v_goal, gamma_goal;
     bool achieved_goal = (*controller_f)(v_goal, gamma_goal, error_prev, x, y, theta, x_goal, y_goal, theta_goal, k_1, k_2, k_3, epsilon);
-        // convert controls to control signals for robot
     this->MapControls(v_goal, gamma_goal);
+	ROS_INFO_STREAM("La velocidad goal "<< v_goal <<" ,gamma goal: "<< gamma_goal);
     return achieved_goal;
   }
 
@@ -90,15 +90,39 @@ public:
   }
 
   void MapControls(double v, double gamma) {
-    // WRITE YOUR CODE: BEGIN
+		this->v=v;
+		this->gamma=gamma;
+  ROS_INFO_STREAM("Gamma  "<< this->gamma);
+	this->speed=v*-1000;
 
-    // Write code that maps v, gamma into class variables speed and steering
+		if(this->speed<-1000){
+			this->speed=-1000;
+		}
 
-    // WRITE YOUR CODE: END
+		if(this->speed>1000){
+			this->speed=1000;
+		}
+
+		this->steering=gamma;
+    ROS_INFO_STREAM("steering: "<< steering);
+
+    if(this->steering < (-M_PI)){
+      steering=(-M_PI);
+    }
+
+    if(this->steering>M_PI){
+      steering=M_PI;
+    }
+
+    this->steering=(90*8*gamma)/M_PI + 90;
+
+
+		ROS_INFO_STREAM("Calculated velocity  "<< speed <<", Calculated steering: "<< steering);
   }
 
   void PublishControls() {
     std_msgs::Int16 to_publish;
+	ROS_INFO_STREAM("Published velocity "<< speed <<" , Published steering : "<< steering);
     if (speed_pub != NULL) {
       to_publish.data = speed;
       speed_pub->publish(to_publish);
@@ -112,64 +136,89 @@ public:
   static bool ControlMoveToPoint(double &v_goal, double &gamma_goal, double &error_prev,
 				 double x, double y, double theta,
 				 double x_goal, double y_goal, double theta_goal,
-				 double k_v=0.5, double k_i=0.1, double k_h=0.2,
-				 double epsilon = 0.2) {
+				 double k_v=3, double k_i=0.1, double k_h=0.5,
+				 double epsilon = 3) {
     ROS_INFO_STREAM("ControlMoveToPoint");
-    // WRITE YOUR CODE: BEGIN
 
-    // Implement "Move To Point" control law
-    // compute and assign class variables v_goal and gamma_goal
-    // From input parameters
+  double v;
+  double theta_star;
+  double distance=sqrt(pow((x_goal-x),2.0)+ pow((y_goal-y),2.0));
 
-    // Returns true when error is smaller than epsilon, otherwise returns false
+  if(distance < epsilon){
+    return true;
+} else {
 
-    // WRITE YOUR CODE: END
-
+		v_goal = k_v*(distance);
+		theta_star = atan2((y_goal-y),(x_goal-x));
+		gamma_goal = k_h*(theta_star-theta);
+    if((tan(gamma_goal/k_h))>M_PI){
+      v_goal=-1*v_goal;
+    }
+		return false;
+		}
   }
 
-  static bool ControlFollowPath(double &v_goal, double &gamma_goal, double &error_prev, double x, double y, double theta, double x_goal, double y_goal, double theta_goal, double k_v=0.5, double k_i=0.05, double k_h=0.2, double d_goal = 0.2) {
+  static bool ControlFollowPath(double &v_goal, double &gamma_goal, double &error_prev, double x, double y, double theta, double x_goal, double y_goal, double theta_goal, double k_v=0.5, double k_i=0.05, double k_h=0.3, double d_goal = 2) {
     ROS_INFO_STREAM("ControlFollowPath");
 
-    // WRITE YOUR CODE: BEGIN
+  double v;
+  double theta_star;
+ double distance=sqrt(pow((x_goal-x),2.0)+ pow((y_goal-y),2.0));
 
-    // Implement "Follow Path" control law
-    // compute and assign class variables v_goal and gamma_goal
-    // From input parameters
+  if(distance < d_goal){
+	   error_prev=0;
+    return true;
 
-    // Returns true when error is smaller than or equal to 0, otherwise returns false
+} else {
 
-    // WRITE YOUR CODE: END
-
+		v_goal=k_v*((distance)-d_goal)+(k_i*error_prev);
+		theta_star=atan2((y_goal-y),(x_goal-x));
+		gamma_goal=k_h*(theta_star-theta);
+		error_prev=error_prev+distance-d_goal;
+    if((tan(gamma_goal/k_h))>M_PI){
+      v_goal=-1*v_goal;
+    }
+		return false;
+		}
   }
 
-  static bool ControlMoveToPose(double &v_goal, double &gamma_goal, double &error_prev, double x, double y, double theta, double x_goal, double y_goal, double theta_goal, double k_rho=0.5, double k_alpha=0.1, double k_beta=0.2, double epsilon = 0.2) {
+  static bool ControlMoveToPose(double &v_goal, double &gamma_goal, double &error_prev, double x, double y, double theta, double x_goal, double y_goal, double theta_goal, double k_rho=0.5, double k_alpha=0.1, double k_beta=0.2, double epsilon = 3) {
     ROS_INFO_STREAM("ControlMoveToPose");
+  
+	double rho=sqrt(pow((x_goal-x),2.0)+ pow((y_goal-y),2.0));
+	double alpha,beta;
+	if(rho<=epsilon){
+		return true;
+}else{
+	v_goal=k_rho*rho;
+	alpha=atan2((y_goal-y),(x_goal-x))-theta;
+	beta=-theta-alpha;
+	gamma_goal=k_alpha*alpha+k_beta*beta;
+	return false;
 
-    // WRITE YOUR CODE: BEGIN
-
-    // Implement "Move To Pose" control law
-    // compute and assign class variables v_goal and gamma_goal
-    // From input parameters
-
-    // Returns true when rho is smaller than or equal to 0, otherwise returns false
-
-    // WRITE YOUR CODE: END
-
+}
   }
 
-    static bool ControlFollowLine(double &v_goal, double &gamma_goal, double &error_prev, double x, double y, double theta, double a_goal, double b_goal, double c_goal, double k_d=0.5, double k_v=0.1, double k_h=0.2, double epsilon = 0.2) {
+    static bool ControlFollowLine(double &v_goal, double &gamma_goal, double &error_prev, double x, double y, double theta, double a_goal, double b_goal, double c_goal, double k_d=0.5, double k_v=0.1, double k_h=0.2, double epsilon = 3) {
     ROS_INFO_STREAM("ControlFollowLine");
+	double distance,alpha,alpha2,theta_star;
+	distance=(a_goal*x+b_goal*y+c_goal)/sqrt(pow((a_goal),2.0)+ pow((b_goal),2.0));
+	if(distance<epsilon){
+		return true;
+}else{
 
-    // WRITE YOUR CODE: BEGIN
+	alpha=-k_d*distance;
+	theta_star=atan2(-a_goal,b_goal);
+	alpha2=k_h*(theta_star-theta);
+	gamma_goal=alpha+alpha2;
+	v_goal=k_v*100;
+	return false;
+}
+  }
 
-    // Implement "Follow Line" control law
-    // compute and assign class variables v_goal and gamma_goal
-    // From input parameters
-
-    // Returns true when distance to line is smaller than epsilon, otherwise returns false
-
-    // WRITE YOUR CODE: END
-
+void SetVGamma(double v, double gamma) {
+    this->v = v;
+    this->gamma = gamma;
   }
 
 
@@ -199,10 +248,8 @@ public:
     out.precision(2); // sets decimal precision to 2 significant digits
     out << "\n\t" << robot.name << ": ";
     out << "Pose(" << robot.x << "," << robot.y << "," << robot.theta << ") ";
-    //out << "Dot(" << robot.x_dot << "," << robot.y_dot << "," << robot.theta_dot << ") ";
     out << "Goal(" << robot.x_goal << "," << robot.y_goal << "," << robot.theta_goal << ") ";
     out << "Control(" << robot.v  << "," << robot.gamma << ") ";
-    //out << "[rbt] (" << robot.speed <<  ","<< robot.steering << ")";
 
     return out;
   }

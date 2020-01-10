@@ -26,7 +26,6 @@
 #include <std_srvs/Empty.h>
 #include <std_srvs/Trigger.h>
 
-
 Robot *sim_robot;
 deque<geometry_msgs::Pose2D> path;
 double goal_x;
@@ -51,6 +50,7 @@ bool ResetPathCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response 
   return true;
 }
 
+
 void SetControlLawCallback(const std_msgs::String& msgIn) {
   path.clear();
   goal_set = false;
@@ -63,8 +63,8 @@ bool IsGoalSetCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Respo
   return goal_set;
 }
 
-
 int main(int argc, char**argv) {
+  //ros::init(argc, argv, "03_controllers"); // Node 03_controllers
   ros::init(argc, argv, "controllers"); // Node 03_controllers
   ros::NodeHandle nh; // Main access point to communications with ROS
 
@@ -103,7 +103,7 @@ int main(int argc, char**argv) {
       sim_robot->PublishControls();
     }
 
-    if ((!goal_set || goal_achieved)) { // Next goal
+     if ((!goal_set || goal_achieved)) { // Next goal
       if (path.size() !=0) { // get next goal from path
 	sim_robot->SetGoal(path[0].x, path[0].y, path[0].theta);
 	goal_set = true;
@@ -111,6 +111,8 @@ int main(int argc, char**argv) {
       } else { // last goal has been achieved
 	goal_set = false;
       }
+
+
     }
 
     ROS_INFO_STREAM(*sim_robot);

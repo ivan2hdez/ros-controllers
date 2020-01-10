@@ -29,6 +29,21 @@ The files can be obtained using the URL listed in the green button above labeled
   * 03_test.cpp - this program helps send paths to the controllers program without having to manually publish messages from the terminal. Feel free to try different paths
 * auto_driver/CMakeLists.txt - compiling directives
 
+## Installation
+Make sure that [EK_AutoNOMOS_Sim](https://github.com/ITAM-Robotica/EK_AutoNOMOS_Sim) is running and open bash at root of project. Then run:
+``` bash
+source devel/setup.bash
+catkin_make
+rosrun auto_driver 03_controllers
+```
+
+Open another terminal and run:
+``` bash
+source devel/setup.bash
+catkin_make
+rosrun auto_driver 03_test
+```
+
 ## Submission
 The project will be submitted through classroom.github.com
 
